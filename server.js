@@ -1,0 +1,29 @@
+const pathModule = require('path')
+const express = require('express')
+const passport = require('passport')
+const bodyParser = require('body-parser')
+const db = require('./database')
+require('./auth')
+
+const app = express()
+
+const secret = process.env.SESSION_SECRET || 'secretdog'
+
+app.use(require('express-session')({ secret: secret, resave: true, saveUninitialized: true }))
+app.use(passport.initialize())
+app.use(passport.session())
+
+app.post('/login', bodyParser.json(), passport.authenticate('local'),
+  (req, res) => {
+    res.json({ username: req.user.username })
+  }
+)
+
+app.use(express.static(pathModule.join(__dirname, '../dist')))
+
+const PORT = process.env.PORT || 8080
+db.syncPromise.then(() => {
+  app.listen(PORT, () => {
+    console.log(`App is now running on http://localhost:${PORT}`)
+  })
+})
