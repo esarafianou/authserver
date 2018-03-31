@@ -23,7 +23,7 @@ module.exports = {
     historyApiFallback: true,
     port: 3000,
     proxy: {
-      '/': `http://localhost:${PORT}`
+      '/api': `http://localhost:${PORT}`
     },
     stats: {
       colors: true
