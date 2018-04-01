@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const db = require('./database')
 const auth = require('./auth')
 const oauth = require('./oauth')
+const history = require('connect-history-api-fallback')
 
 const app = express()
 
@@ -27,6 +28,7 @@ app.post('/api/signup', auth.signupHandler)
 app.get('/api/oauth/authorization', oauth.authorizeHandler)
 app.post('/api/decision', oauth.grantHandler)
 
+app.use(history())
 app.use(express.static(pathModule.join(__dirname, '../dist')))
 
 const PORT = process.env.PORT || 8080
