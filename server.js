@@ -4,7 +4,7 @@ const passport = require('passport')
 const bodyParser = require('body-parser')
 const db = require('./database')
 const auth = require('./auth')
-require('./oauth')
+const oauth = require('./oauth')
 
 const app = express()
 
@@ -23,6 +23,7 @@ app.post('/api/login', passport.authenticate('local'),
 
 app.post('/api/signup', auth.signupHandler)
 
+app.get('/api/oauth/authorization', oauth.authorizeHandler)
 app.use(express.static(pathModule.join(__dirname, '../dist')))
 
 const PORT = process.env.PORT || 8080

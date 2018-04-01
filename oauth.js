@@ -8,6 +8,39 @@ const uid = (length) => {
 
 const server = oauth2orize.createServer()
 
+const checkLoggedInUser = (req, res, next) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    res.status(401).send()
+  } else {
+    next()
+  }
+}
+
+// loggedout -> 401
+// loggedin
+//   authorize success -> 200
+//   authorize fail -> 403
+exports.authorizeHandler = [
+  checkLoggedInUser,
+  server.authorize((clientID, redirectURI, done) => {
+    db.Client.findOne({ where: {client_id: clientID} })
+    .then((client, err) => {
+      if (err) { return done(err) }
+      if (!client) { return done(null, false) }
+      if (client.redirect_uri !== redirectURI) { return done(null, false) }
+      return done(null, client, client.redirect_uri)
+    })
+  }),
+  (req, res) => {
+    res.json({
+      transactionID: req.oauth2.transactionID,
+      user: req.user.username,
+      client: req.oauth2.client
+    })
+  }
+]
+
+
 server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, areq, done) {
   const code = uid(16)
 
