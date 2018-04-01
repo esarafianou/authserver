@@ -77,7 +77,7 @@ passport.deserializeUser((id, done) => {
       id: id
     }
   })
-    .then(user => done(null, user))
-    .catch(err => done(err))
+  .then(user => done(null, user))
+  .catch(err => done(err))
 })
 
