@@ -16,6 +16,11 @@ const checkLoggedInUser = (req, res, next) => {
   }
 }
 
+exports.grantHandler = [
+  checkLoggedInUser,
+  server.decision()
+]
+
 // loggedout -> 401
 // loggedin
 //   authorize success -> 200

@@ -14,6 +14,7 @@ app.use(require('express-session')({ secret: secret, resave: true, saveUninitial
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 app.post('/api/login', passport.authenticate('local'),
   (req, res) => {
@@ -24,6 +25,8 @@ app.post('/api/login', passport.authenticate('local'),
 app.post('/api/signup', auth.signupHandler)
 
 app.get('/api/oauth/authorization', oauth.authorizeHandler)
+app.post('/api/decision', oauth.grantHandler)
+
 app.use(express.static(pathModule.join(__dirname, '../dist')))
 
 const PORT = process.env.PORT || 8080
