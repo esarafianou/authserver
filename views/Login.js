@@ -129,6 +129,9 @@ class Login extends React.Component {
       .then((response) => {
         if (response.status === 200) {
           console.log('logged in')
+          if (typeof this.props.location.query.next !== undefined) {
+            this.props.router.push(this.props.location.query.next)
+          }
         } else {
           console.log('Invalid username or password')
         }
