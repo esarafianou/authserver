@@ -43,8 +43,12 @@ const Client = Connection.define('client', {
   }
 })
 
-const AuthCodes = Connection.define('authcode', {
+const AuthCode = Connection.define('authcode', {
   code: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  redirect_uri: {
     type: Sequelize.STRING,
     allowNull: false
   },
@@ -54,7 +58,7 @@ const AuthCodes = Connection.define('authcode', {
   }
 })
 
-const AccessTokens = Connection.define('accesstoken', {
+const AccessToken = Connection.define('accesstoken', {
   token: {
     type: Sequelize.STRING,
     allowNull: false
@@ -69,21 +73,21 @@ const AccessTokens = Connection.define('accesstoken', {
   }
 })
 
-const RefreshTokens = Connection.define('refreshtoken', {
+const RefreshToken = Connection.define('refreshtoken', {
   refresh_token: {
     type: Sequelize.STRING,
     allowNull: false
   }
 })
 
-User.Codes = User.hasMany(AuthCodes)
-Client.Codes = Client.hasMany(AuthCodes)
+User.Codes = User.hasMany(AuthCode)
+Client.Codes = Client.hasMany(AuthCode)
 
-User.AccessTokens = User.hasMany(AccessTokens)
-Client.AccessTokens = Client.hasMany(AccessTokens)
+User.AccessTokens = User.hasMany(AccessToken)
+Client.AccessTokens = Client.hasMany(AccessToken)
 
-User.RefreshTokens = User.hasMany(RefreshTokens)
-Client.RefreshTokens = Client.hasMany(RefreshTokens)
+User.RefreshTokens = User.hasMany(RefreshToken)
+Client.RefreshTokens = Client.hasMany(RefreshToken)
 
 const syncPromise = Connection.sync()
 
@@ -91,7 +95,7 @@ module.exports = {
   syncPromise: syncPromise,
   User: User,
   Client: Client,
-  AuthCodes: AuthCodes,
-  AccessTokens: AccessTokens,
-  RefreshTokens: RefreshTokens
+  AuthCode: AuthCode,
+  AccessToken: AccessToken,
+  RefreshToken: RefreshToken
 }
