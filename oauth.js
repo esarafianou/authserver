@@ -17,6 +17,17 @@ const checkLoggedInUser = (req, res, next) => {
   }
 }
 
+const validateScope = (scope_arr) => {
+  scopes = new Set(['openid', 'profile', 'email'])
+  valid_scopes = []
+  for (i = 0; i < scope_arr.length; i++) {
+    if (scopes.has(scope_arr[i])) {
+      valid_scopes.push(scope_arr[i])
+    }
+  }
+  return valid_scopes
+}
+
 exports.grantHandler = [
   checkLoggedInUser,
   server.decision()
@@ -44,21 +55,23 @@ exports.authorizeHandler = [
     })
   }),
   (req, res) => {
-    res.json({
+    res_data = {
       transactionID: req.oauth2.transactionID,
       user: req.user.username,
-      client: req.oauth2.client
+      client: req.oauth2.client.name,
+    }
+      res.json(res_data)
     })
   }
 ]
 
-
 server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, areq, done) {
   const code = uid(16)
+  const valid_scopes = validateScope(areq.scope)
 
-  const ac = db.AuthCode.create({
+  db.AuthCode.create({
     code: code,
-    scope: JSON.stringify(areq.scope),
+    scope: JSON.stringify(valid_scopes),
     redirect_uri: redirectURI,
     clientId: client.id,
     userId: user.id,
