@@ -99,6 +99,27 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
   .catch(err => done(err))
 }))
 
+server.exchange(oauth2orize.exchange.refreshToken(function (client, refreshToken, scope, done) {
+    db.RefreshToken.findOne({where: {refresh_token: refreshToken}})
+    .then((token) => {
+      if (!token) return done(null, false)
+      if (client.id !== token.clientId) return done(null, false)
+      const newAccessToken = uid(16)
+      const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
+
+      db.AccessToken.findOne({where: {userId: token.userId, clientId: token.clientId}})
+      .then((acctoken) => {
+        acctoken.update({token: newAccessToken, expiration_date: expirationDate})
+        .then(() =>  {
+          done(null, newAccessToken, refreshToken, {expires_in: expirationDate})
+        })
+        .catch((err) => done(err))
+      })
+      .catch((err) => done(err))
+    .catch((err) => done(err))
+  })
+}))
+
 server.serializeClient(function(client, done) {
   return done(null, client.id)
 })
