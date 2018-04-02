@@ -70,7 +70,8 @@ server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, ar
 server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, done) {
   db.AuthCode.findOne({where: {code: code}})
   .then((code) => {
-    if (client.id !== code.clientId) { return done(null, false); }
+    if (code === null) { return done(null, false) }
+    if (client.id !== code.clientId) { return done(null, false) }
 
     const acctoken = uid(16)
     const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
@@ -90,7 +91,11 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
         clientId: code.clientId,
       })
       .then((refreshtoken) => {
-        done(null, acctoken.token, refreshtoken.refresh_token, { expires_in: acctoken.expiration_date })
+        code.destroy()
+        .then(() =>
+          done(null, acctoken.token, refreshtoken.refresh_token, { expires_in: acctoken.expiration_date })
+        )
+        .catch(err => done(err))
       })
       .catch(err => done(err))
     })
