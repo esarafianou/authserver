@@ -28,6 +28,7 @@ app.post('/api/signup', auth.signupHandler)
 app.get('/api/oauth/authorization', oauth.authorizeHandler)
 app.post('/api/decision', oauth.grantHandler)
 app.post('/api/oauth/token', oauth.token)
+app.get('/api/userinfo', oauth.userInfo)
 
 app.use(history())
 app.use(express.static(pathModule.join(__dirname, '../dist')))

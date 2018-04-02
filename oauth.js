@@ -28,6 +28,29 @@ const validateScope = (scope_arr) => {
   return valid_scopes
 }
 
+const getUserInfo = (req, res, next) => {
+  db.User.findOne({where: {username: req.user.username}})
+  .then((user) => {
+    res_data = { "sub": "auth0" + user.id }
+    if (req.authInfo['scope'].includes('email')) {
+      res_data.email = user.email,
+      res_data.verified_email = user.verified_email
+    }
+    if (req.authInfo['scope'].includes('profile')) {
+      res_data.name = user.given_name + user.family_name,
+      res_data.given_name = user.given_name,
+      res_data.family_name = user.family_name,
+      res_data.preferred_username = user.username
+    }
+    res.json(res_data)
+  })
+}
+
+exports.userInfo = [
+  passport.authenticate('accessToken', { session: false }),
+  getUserInfo
+]
+
 exports.grantHandler = [
   checkLoggedInUser,
   server.decision()
