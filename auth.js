@@ -1,5 +1,6 @@
 const passport = require('passport')
 const Strategy = require('passport-local').Strategy
+const BasicStrategy = require('passport-http').BasicStrategy
 const db = require('./database.js')
 const argon2 = require('argon2')
 
@@ -80,4 +81,18 @@ passport.deserializeUser((id, done) => {
   .then(user => done(null, user))
   .catch(err => done(err))
 })
+
+//This strategy is used to authenticate registered OAuth clients.
+//The authentication data are delivered using the basic authentication scheme (recommended)
+passport.use("clientBasic", new BasicStrategy(
+  function (clientId, clientSecret, done) {
+    db.Client.findOne({where: {client_id: clientId}})
+    .then((client) => {
+      if (!client) return done(null, false)
+      if (client.client_secret == clientSecret) return done(null, client)
+      else return done(null, false)
+    })
+    .catch((err) => done(err))
+  }
+))
 
