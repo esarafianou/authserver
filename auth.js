@@ -1,6 +1,7 @@
 const passport = require('passport')
 const Strategy = require('passport-local').Strategy
 const BasicStrategy = require('passport-http').BasicStrategy
+const BearerStrategy = require('passport-http-bearer').Strategy
 const db = require('./database.js')
 const argon2 = require('argon2')
 
@@ -83,7 +84,7 @@ passport.deserializeUser((id, done) => {
 })
 
 //This strategy is used to authenticate registered OAuth clients.
-//The authentication data are delivered using the basic authentication scheme (recommended)
+//The authentication data are delivered using the basic authentication scheme
 passport.use("clientBasic", new BasicStrategy(
   function (clientId, clientSecret, done) {
     db.Client.findOne({where: {client_id: clientId}})
@@ -93,6 +94,29 @@ passport.use("clientBasic", new BasicStrategy(
       else return done(null, false)
     })
     .catch((err) => done(err))
+  }
+))
+
+// This strategy is used to authenticate users based on an access token (bearer token)
+passport.use("accessToken", new BearerStrategy(
+  function (accessToken, done) {
+    db.AccessToken.findOne({where: {token: accessToken}})
+    .then((token) => {
+      if (!token) return done(null, false)
+      if (new Date() > token.expiration_date) {
+        token.destroy()
+        .catch((err) => done(err))
+      } else {
+        db.User.findOne({where: {id: token.userId}})
+        .then((user) => {
+          if (!user) return done(null, false)
+          const info = { scope: JSON.parse(token.scope) }
+          done(null, user, info);
+        })
+        .catch((err) => done(err))
+      }
+    })
+    .catch(err => done(err))
   }
 ))
 
