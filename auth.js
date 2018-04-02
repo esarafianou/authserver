@@ -5,7 +5,7 @@ const BearerStrategy = require('passport-http-bearer').Strategy
 const db = require('./database.js')
 const argon2 = require('argon2')
 
-const signup = (username, password, confirmPassword, email) => {
+const signup = (username, givenName, familyName, password, confirmPassword, email) => {
   if (password !== confirmPassword) {
     throw new Error('Passwords should match')
   } else if (password.length < 8) {
@@ -18,6 +18,8 @@ const signup = (username, password, confirmPassword, email) => {
     .then(hashedPassword => {
       return db.User.create({
         username: username,
+        family_name: familyName,
+        given_name: givenName,
         password: hashedPassword,
         email: email
       })
@@ -29,7 +31,7 @@ const signup = (username, password, confirmPassword, email) => {
 }
 
 exports.signupHandler = (req, res) => {
-  signup(req.body.username, req.body.password, req.body.confirmPassword, req.body.email)
+  signup(req.body.username, req.body.givenName, req.body.familyName, req.body.password, req.body.confirmPassword, req.body.email)
   .then(result => {
     res.json({sucess: true})
   })

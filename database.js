@@ -13,6 +13,14 @@ const User = Connection.define('user', {
     allowNull: false,
     unique: true
   },
+  given_name: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  family_name: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
   password: {
     type: Sequelize.STRING,
     allowNull: false
@@ -20,7 +28,12 @@ const User = Connection.define('user', {
   email: {
     type: Sequelize.STRING,
     allowNull: false
-  }
+  },
+  verified_email: {
+    type: Sequelize.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
 })
 
 const Client = Connection.define('client', {
