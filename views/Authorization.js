@@ -55,6 +55,7 @@ class Authorization extends React.Component {
           state: response.data.state,
           username: response.data.user,
           client: response.data.client,
+          authorized: response.data.authorized
         })
       } else if (response.status === 401) {
         console.log('not loggedin')
@@ -70,11 +71,24 @@ class Authorization extends React.Component {
     })
   }
 
-  render () {
-    const {classes} = this.props
+  componentDidUpdate() {
+    if (this.state.authorized) {
+      document.getElementById('authform').submit()
+    }
+  }
 
-    return (
-      <div>
+  renderHTML () {
+    const {classes} = this.props
+    if (this.state.authorized) {
+      return(
+        <form id='authform' action='/api/decision' method='post'>
+          <input type='hidden' name='transaction_id' value={this.state.transactionID} />
+          <input type='hidden' name='state' value={this.state.state} />
+        </form>
+      )
+    }
+    else {
+      return(
         <Grid justify='center' spacing={24} container className={classes.root}>
           <Paper className={classes.paper}>
             <Typography align='center' variant='title' > Hello {this.state.username}, </Typography>
@@ -91,9 +105,17 @@ class Authorization extends React.Component {
             </div>
           </Paper>
         </Grid>
+      )
+    }
+  }
+  render () {
+    return (
+      <div>
+        {this.renderHTML()}
       </div>
     )
   }
 }
+
 
 export default withStyles(styles)(Authorization)
