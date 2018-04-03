@@ -17,6 +17,21 @@ const checkLoggedInUser = (req, res, next) => {
   }
 }
 
+const hasGrantConsent = (user, client) => {
+  return db.AuthCode.findOne({where:
+    {
+      clientId: client.id,
+      userId: user.id
+    }
+  })
+  .then((code) => {
+    if (code !== null) {
+      return true
+    }
+    return false
+  })
+}
+
 const validateScope = (scope_arr) => {
   scopes = new Set(['openid', 'profile', 'email'])
   valid_scopes = []
@@ -84,6 +99,10 @@ exports.authorizeHandler = [
       client: req.oauth2.client.name,
       state: req.query.state
     }
+    hasGrantConsent(req.user, req.oauth2.client).then((authorized) => {
+      if (authorized) {
+        res_data.authorized = true
+      }
       res.json(res_data)
     })
   }
