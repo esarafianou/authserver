@@ -12,8 +12,8 @@ const styles = theme => ({
   paper1: {
     marginLeft: 240,
     padding: 16,
-    paddingBottom: 70,
-    width: 300
+    paddingBottom: 160,
+    width: 320
   },
   paper2: {
     marginRight: 20,
@@ -26,12 +26,11 @@ const styles = theme => ({
     width: 230
   },
   button: {
-    marginTop: 20,
+    marginTop: 10,
+    marginBottom: 20,
+    float: 'right',
     clear: 'both',
-    float: 'right'
-  },
-  none: {
-    float: 'none'
+    justify: 'center'
   },
   notification: {
 		position: 'fixed',
@@ -47,7 +46,22 @@ const styles = theme => ({
     webkitBoxShadow: '0 0 5px #a6a6a6',
     mozBoxShadow: '0 0 5px #a6a6a6',
     boxShadow: '0 0 5px #a6a6a6'
-  }
+  },
+  google: {
+    marginBottom: 10,
+    float: 'right',
+    clear: 'both',
+    background: '#d34836',
+    color: 'white',
+    width: 200
+  },
+  github: {
+    float: 'right',
+    clear: 'both',
+    background: 'black',
+    color: 'white',
+    width: 200
+  },
 })
 
 class Login extends React.Component {
@@ -105,6 +119,20 @@ class Login extends React.Component {
     this.setState({
       signup: signup
     })
+  }
+
+  handleGitHubLogin () {
+    if (typeof this.props.location.query.next !== 'undefined') {
+      sessionStorage.setItem('next', this.props.location.query.next)
+    }
+    window.location.replace('/api/auth/github')
+  }
+
+  handleGoogleLogin () {
+    if (typeof this.props.location.query.next !== 'undefined') {
+      sessionStorage.setItem('next', this.props.location.query.next)
+    }
+    window.location.replace('/api/auth/google')
   }
 
   handleLogin (event) {
@@ -166,6 +194,15 @@ class Login extends React.Component {
     }
   }
 
+  componentDidMount () {
+    let next = sessionStorage.getItem('next')
+    console.log(next)
+    if (next !== null) {
+      sessionStorage.removeItem('next')
+      this.props.router.push(next)
+    }
+  }
+
   render () {
     const {classes} = this.props
 
@@ -197,6 +234,12 @@ class Login extends React.Component {
               </form>
               <Button className={classes.button} type='submit' value='Submit' variant='raised'
                 onClick={(event) => { this.handleLogin(event) }}> Login
+              </Button>
+              <Button className={classes.google} type='submit' value='Submit' variant='raised'
+                onClick={(event) => { this.handleGoogleLogin(event) }}> Login with Google
+              </Button>
+              <Button className={classes.github} type='submit' value='Submit' variant='raised'
+                onClick={(event) => { this.handleGitHubLogin(event) }}> Login with Github
               </Button>
             </Paper>
           </Grid>
