@@ -5,8 +5,9 @@ import axios from 'axios'
 
 const styles = theme => ({
   root: {
+    maxWidth: 1250,
     flexGrow: 1,
-    marginTop: 50
+    marginTop: 20
   },
   paper1: {
     marginLeft: 240,
@@ -31,6 +32,21 @@ const styles = theme => ({
   },
   none: {
     float: 'none'
+  },
+  notification: {
+		position: 'fixed',
+    zIndex:101,
+    top: 15,
+    left: '38%',
+    right: '38%',
+    background: '#f2f2f2',
+    height: 35,
+    textAlign:'center',
+    lineHeight: 2.5,
+    overflow: 'hidden',
+    webkitBoxShadow: '0 0 5px #a6a6a6',
+    mozBoxShadow: '0 0 5px #a6a6a6',
+    boxShadow: '0 0 5px #a6a6a6'
   }
 })
 
@@ -39,77 +55,53 @@ class Login extends React.Component {
     super()
     this.state = {
       login: {
-        username: '',
-        password: ''
+        lUsername: '',
+        lPassword: ''
       },
       signup: {
-        username: '',
+        familyName: '',
+        givenName: '',
+        sUsername: '',
         email: '',
-        password: '',
+        sPassword: '',
         confirmPassword: ''
       },
       passwordsNotMatch: false
     }
-    this.handleLUsername = this.handleLUsername.bind(this)
-    this.handleSUsername = this.handleSUsername.bind(this)
-    this.handleEmail = this.handleEmail.bind(this)
-    this.handleLPassword = this.handleLPassword.bind(this)
-    this.handleSPassword = this.handleSPassword.bind(this)
-    this.handleConfirmPassword = this.handleConfirmPassword.bind(this)
-    this.showPasswordsNotMatch = this.showPasswordsNotMatch.bind(this)
+    this.handleLoginInput = this.handleLoginInput.bind(this)
+    this.handleSignUpInput = this.handleSignUpInput.bind(this)
+    this.showNotification = this.showNotification.bind(this)
     this.handleSignUp = this.handleSignUp.bind(this)
     this.handleLogin = this.handleLogin.bind(this)
   }
 
-  showPasswordsNotMatch () {
-    return (
-      <p className='notification'> Passwords do not match </p>
-    )
+  showNotification (change) {
+    let message = ''
+    switch(change) {
+      case 'differentPasswords':
+        message = 'Passwords do not match'
+        break
+      case 'loggedin':
+        message = 'You are successfully logged in!'
+        break
+      case 'signedup':
+        message = 'You have successfully signed up!'
+        break
+    }
+    return (<p className={this.props.classes.notification}> {message} </p>)
   }
 
-  handleLUsername (event) {
+  handleLoginInput (event) {
     const login = {...this.state.login}
-    login.username = event.target.value
+    login[event.target.id] = event.target.value
     this.setState({
       login: login
     })
   }
 
-  handleLPassword (event) {
-    const login = {...this.state.login}
-    login.password = event.target.value
-    this.setState({
-      login: login
-    })
-  }
-
-  handleSUsername (event) {
+  handleSignUpInput (event) {
     const signup = {...this.state.signup}
-    signup.username = event.target.value
-    this.setState({
-      signup: signup
-    })
-  }
-
-  handleEmail (event) {
-    const signup = {...this.state.signup}
-    signup.email = event.target.value
-    this.setState({
-      signup: signup
-    })
-  }
-
-  handleSPassword (event) {
-    const signup = {...this.state.signup}
-    signup.password = event.target.value
-    this.setState({
-      signup: signup
-    })
-  }
-
-  handleConfirmPassword (event) {
-    const signup = {...this.state.signup}
-    signup.confirmPassword = event.target.value
+    signup[event.target.id] = event.target.value
     this.setState({
       signup: signup
     })
@@ -117,8 +109,8 @@ class Login extends React.Component {
 
   handleLogin (event) {
     const data = {
-      username: this.state.login.username,
-      password: this.state.login.password
+      username: this.state.login.lUsername,
+      password: this.state.login.lPassword
     }
     const config = {
       validateStatus: function (status) {
@@ -129,8 +121,10 @@ class Login extends React.Component {
       .then((response) => {
         if (response.status === 200) {
           console.log('logged in')
-          if (typeof this.props.location.query.next !== undefined) {
+          if (typeof this.props.location.query.next !== 'undefined') {
             this.props.router.push(this.props.location.query.next)
+          } else {
+            this.setState({loggedIn: true})
           }
         } else {
           console.log('Invalid username or password')
@@ -142,21 +136,26 @@ class Login extends React.Component {
   }
 
   handleSignUp (event) {
-    const data = {
-      username: this.state.signup.username,
-      email: this.state.signup.email,
-      password: this.state.signup.password,
-      confirmPassword: this.state.signup.confirmPassword
-    }
-    const config = {
-      validateStatus: function (status) {
-        return status === 200 || status === 401
+    if (this.state.signup.sPassword !== this.state.signup.confirmPassword) {
+      this.setState({passwordsNotMatch: true})
+    } else {
+      const data = {
+        username: this.state.signup.sUsername,
+        familyName: this.state.signup.familyName,
+        givenName: this.state.signup.givenName,
+        email: this.state.signup.email,
+        password: this.state.signup.sPassword,
+        confirmPassword: this.state.signup.confirmPassword
       }
-    }
-    axios.post('/api/signup', data, config)
+      const config = {
+        validateStatus: function (status) {
+          return status === 200 || status === 401
+        }
+      }
+      axios.post('/api/signup', data, config)
       .then((response) => {
         if (response.status === 200) {
-          console.log('Signup successful')
+          this.setState({signedUp: true})
         } else {
           console.log(response)
         }
@@ -164,6 +163,7 @@ class Login extends React.Component {
       .catch(error => {
         console.log(error)
       })
+    }
   }
 
   render () {
@@ -171,25 +171,27 @@ class Login extends React.Component {
 
     return (
       <div>
-        { this.state.passwordsNotMatch ? this.showPasswordsNotMatch() : null }
+        { this.state.passwordsNotMatch ? this.showNotification('differentPasswords') : null }
+        { this.state.signedUp ? this.showNotification('signedup') : null }
+        { this.state.loggedIn ? this.showNotification('loggedin') : null }
         <Grid justify='center' spacing={24} container className={classes.root}>
           <Grid item xs={6}>
             <Paper className={classes.paper1}>
               <Typography align='center' variant='headline' > Log in </Typography>
-              <form onSubmit={this.handleLogin} className={classes.container}>
+              <form className={classes.container}>
                 <TextField
-                  id='l_username'
+                  id='lUsername'
                   label='Username'
-                  value={this.state.username}
-                  onChange={this.handleLUsername}
+                  value={this.state.login.username}
+                  onChange={this.handleLoginInput}
                   margin='normal'
                 />
                 <TextField
-                  id='l_password'
+                  id='lPassword'
                   label='Password'
                   type='password'
-                  value={this.state.password}
-                  onChange={this.handleLPassword}
+                  value={this.state.login.password}
+                  onChange={this.handleLoginInput}
                   margin='normal'
                 />
               </form>
@@ -202,35 +204,49 @@ class Login extends React.Component {
             <Paper className={classes.paper2}>
               <Typography align='left' variant='subheading' > New member? </Typography>
               <Typography align='center' variant='headline' > Sign up! </Typography>
-              <form onSubmit={this.handleLogin} className={classes.container}>
+              <form className={classes.container}>
                 <TextField
-                  id='r_username'
+                  id='familyName'
+                  label='Family Name'
+                  value={this.state.signup.familyName}
+                  onChange={this.handleSignUpInput}
+                  margin='normal'
+                />
+                <TextField
+                  id='givenName'
+                  label='Given Name'
+                  value={this.state.signup.givenName}
+                  onChange={this.handleSignUpInput}
+                  margin='normal'
+                />
+                <TextField
+                  id='sUsername'
                   label='Username'
-                  value={this.state.username}
-                  onChange={this.handleSUsername}
+                  value={this.state.signup.username}
+                  onChange={this.handleSignUpInput}
                   margin='normal'
                 />
                 <TextField
                   id='email'
                   label='Email'
-                  value={this.state.email}
-                  onChange={this.handleEmail}
+                  value={this.state.signup.email}
+                  onChange={this.handleSignUpInput}
                   margin='normal'
                 />
                 <TextField
-                  id='r_password'
+                  id='sPassword'
                   label='Password'
                   type='password'
-                  value={this.state.password}
-                  onChange={this.handleSPassword}
+                  value={this.state.signup.password}
+                  onChange={this.handleSignUpInput}
                   margin='normal'
                 />
                 <TextField
                   id='confirmPassword'
                   label='Confirm Password'
                   type='password'
-                  value={this.state.confirmPassword}
-                  onChange={this.handleConfirmPassword}
+                  value={this.state.signup.confirmPassword}
+                  onChange={this.handleSignUpInput}
                   margin='normal'
                 />
               </form>
