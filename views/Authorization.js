@@ -53,6 +53,8 @@ class Authorization extends React.Component {
         this.setState({
           transactionID: response.data.transactionID,
           state: response.data.state,
+          username: response.data.user,
+          client: response.data.client,
         })
       } else if (response.status === 401) {
         console.log('not loggedin')
@@ -75,8 +77,8 @@ class Authorization extends React.Component {
       <div>
         <Grid justify='center' spacing={24} container className={classes.root}>
           <Paper className={classes.paper}>
-            <Typography align='center' variant='title' > Hello user </Typography>
-            <Typography align='center' variant='title' > X client wants to access your data </Typography>
+            <Typography align='center' variant='title' > Hello {this.state.username}, </Typography>
+            <Typography align='center' variant='title' > {this.state.client} wants to access your data </Typography>
             <div className={classes.buttons}>
               <form action='/api/decision' method='post' >
                 <input type='hidden' name='transaction_id' value={this.state.transactionID} />
