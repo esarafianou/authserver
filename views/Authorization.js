@@ -38,7 +38,8 @@ class Authorization extends React.Component {
       client_id: this.props.location.query.clientID,
       redirect_uri: this.props.location.query.redirectURI,
       response_type: this.props.location.query.response_type,
-      scope: this.props.location.query.scope
+      scope: this.props.location.query.scope,
+      state: this.props.location.query.state
     } 
     axios.get('/api/oauth/authorization', {
       params: params, 
@@ -49,7 +50,10 @@ class Authorization extends React.Component {
     .then((response) => {
       if (response.status === 200) {
         console.log('authorized')
-        this.setState({transactionID: response.data.transactionID})
+        this.setState({
+          transactionID: response.data.transactionID,
+          state: response.data.state,
+        })
       } else if (response.status === 401) {
         console.log('not loggedin')
         const next = encodeURIComponent(location.pathname + location.search) 
@@ -76,6 +80,7 @@ class Authorization extends React.Component {
             <div className={classes.buttons}>
               <form action='/api/decision' method='post' >
                 <input type='hidden' name='transaction_id' value={this.state.transactionID} />
+                <input type='hidden' name='state' value={this.state.state} />
                 <Button type='submit' value='deny' name='cancel' variant='raised' color='secondary' className={classes.pad}> Deny
                 </Button>
                 <Button type='submit' value='accept' variant='raised' color='primary'> Accept
