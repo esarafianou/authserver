@@ -23,6 +23,13 @@ app.post('/api/login', passport.authenticate('local'),
   }
 )
 
+app.post('/api/logout',
+  function (req, res) {
+    req.logout()
+    res.json({})
+  }
+)
+
 app.post('/api/signup', auth.signupHandler)
 
 app.get('/api/oauth/authorization', oauth.authorizeHandler)
