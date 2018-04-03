@@ -23,6 +23,22 @@ app.post('/api/login', passport.authenticate('local'),
   }
 )
 
+app.get('/api/auth/github', passport.authenticate('github'))
+app.get('/api/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/?loggedIn=false' }),
+  function(req, res) {
+    res.redirect('http://localhost:3000')
+  })
+
+app.get('/api/auth/google',
+  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }))
+
+app.get('/api/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: 'http://localhost:3000?loggedIn=false' }),
+  function(req, res) {
+    res.redirect('http://localhost:3000')
+  })
+
 app.post('/api/logout',
   function (req, res) {
     req.logout()

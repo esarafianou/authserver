@@ -2,6 +2,8 @@ const passport = require('passport')
 const Strategy = require('passport-local').Strategy
 const BasicStrategy = require('passport-http').BasicStrategy
 const BearerStrategy = require('passport-http-bearer').Strategy
+const GitHubStrategy = require('passport-github').Strategy
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
 const db = require('./database.js')
 const argon2 = require('argon2')
 
@@ -122,3 +124,43 @@ passport.use("accessToken", new BearerStrategy(
   }
 ))
 
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/api/auth/google/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(profile)
+    db.User.findOrCreate({ where: {
+      googleId: profile.id,
+      username: profile.username,
+      email: profile.emails[0].value
+    }})
+    .spread((user, created) => {
+      return done(null, user)
+    })
+    .catch((err) => {
+      return done(err)
+    })
+  }
+))
+
+passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/api/auth/github/callback"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    db.User.findOrCreate({ where: {
+      githubId: profile.id,
+      username: profile.username,
+      email: profile.emails[0].value
+    }})
+    .spread((user, created) => {
+      return cb(null, user)
+    })
+    .catch((err) => {
+      return cb(err)
+    })
+  }
+));

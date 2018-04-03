@@ -15,24 +15,26 @@ const User = Connection.define('user', {
   },
   given_name: {
     type: Sequelize.STRING,
-    allowNull: false,
   },
   family_name: {
-    type: Sequelize.STRING,
-    allowNull: false,
+    type: Sequelize.STRING
   },
   password: {
-    type: Sequelize.STRING,
-    allowNull: false
+    type: Sequelize.STRING
   },
   email: {
-    type: Sequelize.STRING,
-    allowNull: false
+    type: Sequelize.STRING
   },
   verified_email: {
     type: Sequelize.BOOLEAN,
     allowNull: false,
     defaultValue: false
+  },
+  googleId: {
+    type: Sequelize.INTEGER
+  },
+  githubId: {
+    type: Sequelize.INTEGER
   },
 })
 
