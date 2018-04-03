@@ -82,6 +82,7 @@ exports.authorizeHandler = [
       transactionID: req.oauth2.transactionID,
       user: req.user.username,
       client: req.oauth2.client.name,
+      state: req.query.state
     }
       res.json(res_data)
     })
