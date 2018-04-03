@@ -121,16 +121,18 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
       expiration_date: expirationDate
     })
     .then((acctoken) => {
+      const expirationDate = new Date(new Date().getTime() + 5 * 24 *(3600 * 1000))
       const refreshtoken = uid(16)
       db.RefreshToken.create({
-        refresh_token: refreshtoken,
+        token: refreshtoken,
+        expiration_date: expirationDate,
         userId: code.userId,
         clientId: code.clientId,
       })
       .then((refreshtoken) => {
         code.destroy()
         .then(() =>
-          done(null, acctoken.token, refreshtoken.refresh_token, { expires_in: acctoken.expiration_date })
+          done(null, acctoken.token, refreshtoken.token, { expires_in: acctoken.expiration_date })
         )
         .catch(err => done(err))
       })
@@ -142,10 +144,11 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
 }))
 
 server.exchange(oauth2orize.exchange.refreshToken(function (client, refreshToken, scope, done) {
-    db.RefreshToken.findOne({where: {refresh_token: refreshToken}})
+    db.RefreshToken.findOne({where: {token: refreshToken}})
     .then((token) => {
       if (!token) return done(null, false)
       if (client.id !== token.clientId) return done(null, false)
+      if (new Date() > token.expiration_date) return done(null, false)
       const newAccessToken = uid(16)
       const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
 

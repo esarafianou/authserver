@@ -84,13 +84,18 @@ const AccessToken = Connection.define('accesstoken', {
     type: Sequelize.STRING,
     allowNull: false
   }
+
 })
 
 const RefreshToken = Connection.define('refreshtoken', {
-  refresh_token: {
+  token: {
     type: Sequelize.STRING,
     allowNull: false
-  }
+  },
+  expiration_date: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
 })
 
 User.Codes = User.hasMany(AuthCode)
