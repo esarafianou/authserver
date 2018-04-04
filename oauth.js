@@ -109,7 +109,7 @@ exports.authorizeHandler = [
 ]
 
 server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, areq, done) {
-  const code = uid(16)
+  const code = uid(32)
   const valid_scopes = validateScope(areq.scope)
 
   db.AuthCode.create({
@@ -129,7 +129,7 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
     if (code === null) { return done(null, false) }
     if (client.id !== code.clientId) { return done(null, false) }
 
-    const acctoken = uid(16)
+    const acctoken = uid(32)
     const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
 
     db.AccessToken.create({
@@ -141,7 +141,7 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
     })
     .then((acctoken) => {
       const expirationDate = new Date(new Date().getTime() + 5 * 24 *(3600 * 1000))
-      const refreshtoken = uid(16)
+      const refreshtoken = uid(32)
       db.RefreshToken.create({
         token: refreshtoken,
         expiration_date: expirationDate,
