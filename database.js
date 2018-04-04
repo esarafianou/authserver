@@ -100,6 +100,8 @@ const RefreshToken = Connection.define('refreshtoken', {
   },
 })
 
+const UserClientGrant = Connection.define('userclientgrant')
+
 User.Codes = User.hasMany(AuthCode)
 Client.Codes = Client.hasMany(AuthCode)
 
@@ -109,6 +111,9 @@ Client.AccessTokens = Client.hasMany(AccessToken)
 User.RefreshTokens = User.hasMany(RefreshToken)
 Client.RefreshTokens = Client.hasMany(RefreshToken)
 
+User.belongsToMany(Client, { through: UserClientGrant })
+Client.belongsToMany(User, { through: UserClientGrant })
+
 const syncPromise = Connection.sync()
 
 module.exports = {
@@ -117,5 +122,6 @@ module.exports = {
   Client: Client,
   AuthCode: AuthCode,
   AccessToken: AccessToken,
-  RefreshToken: RefreshToken
+  RefreshToken: RefreshToken,
+  UserClientGrant: UserClientGrant
 }

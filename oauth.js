@@ -18,7 +18,7 @@ const checkLoggedInUser = (req, res, next) => {
 }
 
 const hasGrantConsent = (user, client) => {
-  return db.AuthCode.findOne({where:
+  return db.UserClientGrant.findOne({where:
     {
       clientId: client.id,
       userId: user.id
@@ -123,7 +123,15 @@ server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, ar
     clientId: client.id,
     userId: user.id,
   })
+  .then(() => {
+    return db.UserClientGrant.findOrCreate({
+      where: {
+        userId: user.id,
+        clientId: client.id
+      }
+    })
   .then(() => done(null, code))
+  })
   .catch((err) => done('Internal Server Error'))
 }))
 
