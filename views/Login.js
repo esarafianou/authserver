@@ -89,19 +89,7 @@ class Login extends React.Component {
     this.handleLogin = this.handleLogin.bind(this)
   }
 
-  showNotification (change) {
-    let message = ''
-    switch(change) {
-      case 'differentPasswords':
-        message = 'Passwords do not match'
-        break
-      case 'loggedin':
-        message = 'You are successfully logged in!'
-        break
-      case 'signedup':
-        message = 'You have successfully signed up!'
-        break
-    }
+  showNotification (message) {
     return (<p className={this.props.classes.notification}> {message} </p>)
   }
 
@@ -208,9 +196,9 @@ class Login extends React.Component {
 
     return (
       <div>
-        { this.state.passwordsNotMatch ? this.showNotification('differentPasswords') : null }
-        { this.state.signedUp ? this.showNotification('signedup') : null }
-        { this.state.loggedIn ? this.showNotification('loggedin') : null }
+        { this.state.passwordsNotMatch ? this.showNotification('Passwords do not match') : null }
+        { this.state.signedUp ? this.showNotification('You have successfully signed up') : null }
+        { this.state.loggedIn ? this.showNotification('You are now loggedIn') : null }
         <Grid justify='center' spacing={24} container className={classes.root}>
           <Grid item xs={6}>
             <Paper className={classes.paper1}>
