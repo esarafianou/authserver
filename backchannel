@@ -1,0 +1,38 @@
+# exchange code with access token
+exchange_code() {
+    curl  -v  -H "Content-Type: application/json" -X POST 127.0.0.1:8080/api/oauth/token -u 12345678:za98df76fv45bg90bg12 \
+    -d '{"code": "'$1'", "grant_type": "authorization_code"}'
+}
+
+# exchange refresh token with new access token
+exchange_refresh_token() {
+    curl -v -H "Content-Type: application/json" -X POST 127.0.0.1:8080/api/oauth/token -u 12345678:za98df76fv45bg90bg12 \
+    -d '{"refresh_token": "'$1'", "grant_type": "refresh_token"}'
+}
+
+# get userInfo
+get_user_info() {
+    curl http://localhost:3000/api/userinfo -v -H "Authorization: Bearer $1"
+}
+
+usage() {
+    echo "Usage:
+    ./commands <option> <value>
+where <option> is:
+    code
+        exchange auth code <value> with access token
+    refresh_token 
+        exchange refresh token <value>  with access token
+    userinfo
+        get user information where <value> is a valid access token"
+}
+
+OPTION=$1
+VALUE=$2
+
+case $OPTION in
+    "code" ) exchange_code $VALUE;;
+    "refresh_token" ) exchange_refresh_token $VALUE;;
+    "userinfo" ) get_user_info $VALUE;;
+    "usage") usage;;
+esac
