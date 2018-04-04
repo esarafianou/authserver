@@ -89,7 +89,12 @@ class Login extends React.Component {
     this.handleLogin = this.handleLogin.bind(this)
   }
 
-  showNotification (message) {
+  showNotification (message, stateName) {
+    setTimeout(() => {
+      const temp = this.state
+      temp[stateName] = false
+      this.setState(temp)}, 2000
+    )
     return (<p className={this.props.classes.notification}> {message} </p>)
   }
 
@@ -165,19 +170,21 @@ class Login extends React.Component {
       }
       const config = {
         validateStatus: function (status) {
-          return status === 200 || status === 401
+          return status === 200 || status === 409 || status === 400
         }
       }
       axios.post('/api/signup', data, config)
       .then((response) => {
         if (response.status === 200) {
           this.setState({signedUp: true})
+        } else if (response.status === 409) {
+          this.setState({ userExists: true })
         } else {
-          console.log(response)
+          this.setState({passwordsNotLong: true})
         }
       })
       .catch(error => {
-        console.log(error)
+        console.log(error.message)
       })
     }
   }
@@ -196,9 +203,11 @@ class Login extends React.Component {
 
     return (
       <div>
-        { this.state.passwordsNotMatch ? this.showNotification('Passwords do not match') : null }
-        { this.state.signedUp ? this.showNotification('You have successfully signed up') : null }
-        { this.state.loggedIn ? this.showNotification('You are now loggedIn') : null }
+        { this.state.passwordsNotMatch ? this.showNotification('Passwords do not match', 'passwordsNotMatch') : null }
+        { this.state.signedUp ? this.showNotification('You have successfully signed up', 'signedUp') : null }
+        { this.state.passwordsNotLong ? this.showNotification('Passwords should be at least 8 digits long', 'passwordsNotLong') : null}
+        { this.state.userExists ? this.showNotification('Username already exists', 'userExists') : null }
+        { this.state.loggedIn ? this.showNotification('You are now loggedIn', 'loggedIn') : null }
         <Grid justify='center' spacing={24} container className={classes.root}>
           <Grid item xs={6}>
             <Paper className={classes.paper1}>
