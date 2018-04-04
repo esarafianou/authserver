@@ -31,10 +31,10 @@ const User = Connection.define('user', {
     defaultValue: false
   },
   googleId: {
-    type: Sequelize.INTEGER
+    type: Sequelize.STRING
   },
   githubId: {
-    type: Sequelize.INTEGER
+    type: Sequelize.STRING
   },
 })
 
