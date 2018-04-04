@@ -34,6 +34,7 @@ const hasGrantConsent = (user, client) => {
 
 const validateScope = (scope_arr) => {
   scopes = new Set(['openid', 'profile', 'email'])
+
   valid_scopes = []
   for (i = 0; i < scope_arr.length; i++) {
     if (scopes.has(scope_arr[i])) {
@@ -46,22 +47,23 @@ const validateScope = (scope_arr) => {
 const getUserInfo = (req, res, next) => {
   db.User.findOne({where: {username: req.user.username}})
   .then((user) => {
-    res_data = { "sub": "auth0" + user.id }
-    if (req.authInfo['scope'].includes('email')) {
-      res_data.email = user.email,
-      res_data.verified_email = user.verified_email
+    const resData = { sub: 'auth0|' + user.id }
+
+    if (req.authInfo.scope.includes('email')) {
+      resData.email = user.email
+      resData.email_verified = user.verified_email
     }
-    if (req.authInfo['scope'].includes('profile')) {
-      res_data.name = user.given_name + user.family_name,
-      res_data.given_name = user.given_name,
-      res_data.family_name = user.family_name,
-      res_data.preferred_username = user.username
+    if (req.authInfo.scope.includes('profile')) {
+      resData.name = user.given_name + ' ' + user.family_name
+      resData.given_name = user.given_name
+      resData.family_name = user.family_name
+      resData.preferred_username = user.username
     }
-    res.json(res_data)
+    res.json(resData)
   })
 }
 
-exports.userInfo = [
+exports.userInfoHandler = [
   passport.authenticate('accessToken', { session: false }),
   getUserInfo
 ]
@@ -71,7 +73,7 @@ exports.grantHandler = [
   server.decision()
 ]
 
-exports.token = [
+exports.tokenHandler = [
 	passport.authenticate('clientBasic', { session: false }),
 	server.token(),
 	server.errorHandler()
@@ -85,26 +87,28 @@ exports.authorizeHandler = [
   checkLoggedInUser,
   server.authorize((clientID, redirectURI, done) => {
     db.Client.findOne({ where: {client_id: clientID} })
-    .then((client, err) => {
-      if (err) { return done(err) }
-      if (!client) { return done(null, false) }
-      if (client.redirect_uri !== redirectURI) { return done(null, false) }
-      return done(null, client, client.redirect_uri)
+    .then((client) => {
+      if (!client || client.redirect_uri !== redirectURI) {
+        return done(null, false)
+      }
+
+      done(null, client, client.redirect_uri)
     })
+    .catch((err) => done(new Error('Internal Server Error')))
   }),
   (req, res) => {
-    res_data = {
+    const resData = {
       transactionID: req.oauth2.transactionID,
       user: req.user.username,
       client: req.oauth2.client.name,
       state: req.query.state
     }
-    hasGrantConsent(req.user, req.oauth2.client).then((authorized) => {
-      if (authorized) {
-        res_data.authorized = true
-      }
-      res.json(res_data)
+    hasGrantConsent(req.user, req.oauth2.client)
+    .then((authorized) => {
+      resData.authorized = authorized
+      res.json(resData)
     })
+    .catch((err) => res.status(500).send('Internal Server Error'))
   }
 ]
 
@@ -120,14 +124,15 @@ server.grant(oauth2orize.grant.code(function(client, redirectURI, user, ares, ar
     userId: user.id,
   })
   .then(() => done(null, code))
-  .catch((err) => done(err))
+  .catch((err) => done('Internal Server Error'))
 }))
 
-server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, done) {
+server.exchange(oauth2orize.exchange.code((client, code, redirectURI, done) => {
   db.AuthCode.findOne({where: {code: code}})
   .then((code) => {
-    if (code === null) { return done(null, false) }
-    if (client.id !== code.clientId) { return done(null, false) }
+    if (code === null || client.id !== code.clientId) {
+      return done(null, false)
+    }
 
     const acctoken = uid(32)
     const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
@@ -153,43 +158,42 @@ server.exchange(oauth2orize.exchange.code(function(client, code, redirectURI, do
         .then(() =>
           done(null, acctoken.token, refreshtoken.token, { expires_in: acctoken.expiration_date })
         )
-        .catch(err => done(err))
+        .catch(err => done(new Error('Internal Server Error')))
       })
-      .catch(err => done(err))
+      .catch(err => done(new Error('The server could not create a refresh token')))
     })
-    .catch(err => done(err))
+    .catch(err => done(new Error('The server could not create an access token')))
   })
-  .catch(err => done(err))
+  .catch(err => done(new Error('Internal Server Error')))
 }))
 
-server.exchange(oauth2orize.exchange.refreshToken(function (client, refreshToken, scope, done) {
+server.exchange(oauth2orize.exchange.refreshToken((client, refreshToken, scope, done) => {
     db.RefreshToken.findOne({where: {token: refreshToken}})
     .then((token) => {
-      if (!token) return done(null, false)
-      if (client.id !== token.clientId) return done(null, false)
-      if (new Date() > token.expiration_date) return done(null, false)
-      const newAccessToken = uid(16)
+      if (!token || client.id !== token.clientId || new Date() > token.expiration_date) {
+        return done(null, false)
+      }
+
+      const newAccessToken = uid(32)
       const expirationDate = new Date(new Date().getTime() + (3600 * 1000))
 
-      db.AccessToken.findOne({where: {userId: token.userId, clientId: token.clientId}})
+      return db.AccessToken.findOne({where: {userId: token.userId, clientId: token.clientId}})
       .then((acctoken) => {
         acctoken.update({token: newAccessToken, expiration_date: expirationDate})
         .then(() =>  {
           done(null, newAccessToken, refreshToken, {expires_in: expirationDate})
         })
-        .catch((err) => done(err))
+        .catch((err) => done(new Error('Internal Server Error')))
       })
-      .catch((err) => done(err))
-    .catch((err) => done(err))
+      .catch((err) => done(new Error('Internal Server Error')))
+    .catch((err) => done(new Error('Internal Server Error')))
   })
 }))
 
-server.serializeClient(function(client, done) {
-  return done(null, client.id)
-})
+server.serializeClient((client, done) => done(null, client.id))
 
-server.deserializeClient(function(id, done) {
+server.deserializeClient((id, done) => {
   db.Client.findOne({where: {id: id}})
   .then((client) => done(null, client))
-  .catch((err) => done(err))
+  .catch((err) => done(new Error('Internal Server Error')))
 })

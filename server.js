@@ -26,21 +26,21 @@ app.post('/api/login', passport.authenticate('local'),
 app.get('/api/auth/github', passport.authenticate('github'))
 app.get('/api/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/?loggedIn=false' }),
-  function(req, res) {
+  (req, res) => {
     res.redirect('http://localhost:3000')
   })
 
 app.get('/api/auth/google',
-  passport.authenticate('google', { scope: ['https://www.googleapis.com/auth/plus.login'] }))
+  passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 app.get('/api/auth/google/callback',
   passport.authenticate('google', { failureRedirect: 'http://localhost:3000?loggedIn=false' }),
-  function(req, res) {
+  (req, res) => {
     res.redirect('http://localhost:3000')
   })
 
 app.post('/api/logout',
-  function (req, res) {
+  (req, res) => {
     req.logout()
     res.json({})
   }
@@ -50,8 +50,8 @@ app.post('/api/signup', auth.signupHandler)
 
 app.get('/api/oauth/authorization', oauth.authorizeHandler)
 app.post('/api/decision', oauth.grantHandler)
-app.post('/api/oauth/token', oauth.token)
-app.get('/api/userinfo', oauth.userInfo)
+app.post('/api/oauth/token', oauth.tokenHandler)
+app.get('/api/userinfo', oauth.userInfoHandler)
 
 app.use(history())
 app.use(express.static(pathModule.join(__dirname, '../dist')))
